@@ -40,8 +40,8 @@ func simulate(w, h int8, ais []AI, n int) map[int8]int {
 func doAnimation() {
 	w := NewWorld(14, 10)
 	w.AddPlayerAtRandom(0, RandomValidDirectionAI)
-	w.AddPlayerAtRandom(1, MaxAreaAI)
-	w.AddPlayerAtRandom(2, MonteCarloNSimulationsAI(20))
+	w.AddPlayerAtRandom(1, RandomValidDirectionAI)
+	// w.AddPlayerAtRandom(2, MonteCarloNSimulationsAI(20))
 
 	winnerId := animate(&w)
 	fmt.Printf("game finished, player %d wins\n", winnerId)

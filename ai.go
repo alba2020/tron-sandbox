@@ -2,18 +2,18 @@ package main
 
 // -------------- start AI -------------
 
-type AI func(w *World, p *Player) Direction
+type AI func(w *World, p *Player) DirectionMask
 
-func AlwaysLeftAI(w *World, p *Player) Direction {
+func AlwaysLeftAI(w *World, p *Player) DirectionMask {
 	return Left
 }
 
-func RandomDirectionAI(w *World, p *Player) Direction {
+func RandomDirectionAI(w *World, p *Player) DirectionMask {
 	return randomElement(DIRECTIONS)
 }
 
 func RandomDirectionNRetriesAI(n int) AI {
-	return func(w *World, p *Player) Direction {
+	return func(w *World, p *Player) DirectionMask {
 		for i := 0; i < n; i++ {
 			turn := randomElement(DIRECTIONS)
 			x, y := p.NextCoords(turn)
@@ -25,23 +25,23 @@ func RandomDirectionNRetriesAI(n int) AI {
 	}
 }
 
-func RandomValidDirectionAI(w *World, p *Player) Direction {
-	valid := w.ValidTurns(p)
-	if len(valid) == 0 {
+func RandomValidDirectionAI(w *World, p *Player) DirectionMask {
+	valid := w.ValidTurns(p.id)
+	if valid == None {
 		return randomElement(DIRECTIONS)
 	}
-	return randomElement(valid)
+	return valid.Random()
 }
 
-func MaxAreaAI(w *World, p *Player) Direction {
-	valid := w.ValidTurns(p)
-	if len(valid) == 0 {
+func MaxAreaAI(w *World, p *Player) DirectionMask {
+	valid := w.ValidTurns(p.id)
+	if valid == None {
 		return randomElement(DIRECTIONS)
 	}
-	turn := randomElement(valid)
+	turn := valid.Random()
 	maxArea := 0
 
-	for _, dir := range valid {
+	for _, dir := range DirectionsTable[valid] {
 		next_x, next_y := p.NextCoords(dir)
 		area := w.Area(next_x, next_y, EMPTY)
 		if area > maxArea {
@@ -54,11 +54,11 @@ func MaxAreaAI(w *World, p *Player) Direction {
 }
 
 func MonteCarloNSimulationsAI(n int) AI {
-	return func(world *World, player *Player) Direction {
-		decisions := make(map[Direction]int)
-		valid := world.ValidTurns(player)
+	return func(world *World, player *Player) DirectionMask {
+		decisions := make(map[DirectionMask]int)
+		valid := world.ValidTurns(player.id)
 
-		for _, firstTurn := range valid {
+		for _, firstTurn := range DirectionsTable[valid] {
 			for i := 0; i < n; i++ {
 				simWorld := world.Copy()
 
@@ -78,8 +78,8 @@ func MonteCarloNSimulationsAI(n int) AI {
 		}
 
 		if len(decisions) == 0 { // no ideas :(
-			if len(valid) > 0 { // valid turns left
-				return randomElement(valid)
+			if valid != None { // valid turns left
+				return valid.Random()
 			} else {
 				return randomElement(DIRECTIONS) // bad turn
 			}

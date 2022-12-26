@@ -44,8 +44,10 @@ func (w *World) Copy() *World {
 	}
 
 	for i := 0; i < NUM_PLAYERS; i++ {
-		cp.players[i] = w.players[i]
-		cp.players[i].world = &cp
+		if w.players[i].alive {
+			cp.players[i] = w.players[i]
+			cp.players[i].world = &cp
+		}
 	}
 
 	return &cp
@@ -81,20 +83,21 @@ func (w *World) AddPlayerAtRandom(id int8, f AI) {
 	w.AddPlayer(id, rx, ry, f)
 }
 
-func (w *World) ValidTurns(p *Player) []Direction {
-	// valid := make([]string, 0, 4)
-	valid := []Direction{}
+func (w *World) ValidTurns(pid int8) DirectionMask {
+	valid := None
 
-	for _, turn := range DIRECTIONS {
-		if w.TurnValid(p.NextCoords(turn)) {
-			valid = append(valid, turn)
+	p := &w.players[pid]
+
+	for _, direction := range DIRECTIONS {
+		if w.TurnValid(p.NextCoords(direction)) {
+			valid |= direction // set bit
 		}
 	}
 
 	return valid
 }
 
-func (w *World) ApplyTurn(pid int8, turn Direction) {
+func (w *World) ApplyTurn(pid int8, turn DirectionMask) {
 	player := &w.players[pid]
 	player.x, player.y = player.NextCoords(turn)
 
@@ -121,7 +124,7 @@ func (w *World) Active() bool {
 }
 
 func (w *World) SimTurn() {
-	player := w.players[w.current]
+	player := &w.players[w.current]
 	turn := player.NextTurn()
 
 	// fmt.Printf("%v [%s]\n", player, turn)

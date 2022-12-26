@@ -25,6 +25,15 @@ func BenchmarkCreateWorldAndSimTurn(b *testing.B) {
 	}
 }
 
+func BenchmarkCreateWorldAndValidTurns(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		w, p := createBigWorld()
+		_ = w.ValidTurns(p.id)
+		_ = w.ValidTurns(p.id)
+		_ = w.ValidTurns(p.id)
+	}
+}
+
 func BenchmarkPlayerAllocation(b *testing.B) {
 
 	const N = 4

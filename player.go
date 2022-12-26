@@ -13,11 +13,11 @@ type Player struct {
 	alive    bool
 }
 
-func (p *Player) NextTurn() Direction {
+func (p *Player) NextTurn() DirectionMask {
 	return p.nextTurn(p.world, p)
 }
 
-func (p *Player) NextCoords(turn Direction) (int8, int8) {
+func (p *Player) NextCoords(turn DirectionMask) (int8, int8) {
 	switch turn {
 	case Left:
 		return p.x - 1, p.y
