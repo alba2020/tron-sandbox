@@ -45,8 +45,9 @@ func createBigWorld() (*World, *Player) {
 		 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .`
 
 	w := ParseWorld(30, 20, txt)
-	w.AddPlayer(2, 12, 7, nil)
-	player := w.AddPlayer(1, 11, 10, nil)
+	w.AddPlayer(2, 12, 7, RandomValidDirectionAI)
+	player := w.AddPlayer(1, 11, 10, RandomValidDirectionAI)
+	w.current = 1
 	return w, player
 }
 

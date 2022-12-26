@@ -12,6 +12,19 @@ func BenchmarkPointerCopy(b *testing.B) {
 	}
 }
 
+func BenchmarkCreateWorld(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, _ = createBigWorld()
+	}
+}
+
+func BenchmarkCreateWorldAndSimTurn(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		w, _ := createBigWorld()
+		w.SimTurn()
+	}
+}
+
 func BenchmarkPlayerAllocation(b *testing.B) {
 
 	const N = 4
