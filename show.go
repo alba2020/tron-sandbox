@@ -69,3 +69,17 @@ func Show(w *World) {
 	}
 	fmt.Print(colorReset)
 }
+
+func SimplePrint(w *World) {
+	var i, j int8
+	for j = 0; j < w.height; j++ {
+		for i = 0; i < w.width; i++ {
+			if w.At(i, j) == EMPTY {
+				fmt.Print(".")
+			} else {
+				fmt.Print(w.At(i, j))
+			}
+		}
+		fmt.Println()
+	}
+}

@@ -5,5 +5,8 @@ run: build
 build: *.go
 	go build .
 
-clean: sandbox
-	rm -f sandbox
+mcprof:
+	go test --bench MonteCarloAI -cpuprofile mc.prof
+
+clean:
+	rm -f sandbox mc.prof

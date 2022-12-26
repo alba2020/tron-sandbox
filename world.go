@@ -5,42 +5,16 @@ import (
 	"math/rand"
 )
 
+// --------- start world ---------
+
 const EMPTY int8 = -1
 const NUM_PLAYERS = 4
 
 type World struct {
-	width   int8
-	height  int8
-	cells   []int8
+	Grid
 	players [NUM_PLAYERS]*Player
 	alive   int8
 	current int8
-}
-
-func (w *World) At(x int8, y int8) int8 {
-	return w.cells[w.Offset(x, y)]
-}
-
-func (w *World) Set(x, y int8, val int8) {
-	w.cells[w.Offset(x, y)] = val
-}
-
-func (w *World) Offset(x, y int8) int {
-	return int(y)*int(w.width) + int(x)
-}
-
-func (w *World) Print() {
-	var i, j int8
-	for j = 0; j < w.height; j++ {
-		for i = 0; i < w.width; i++ {
-			if w.At(i, j) == EMPTY {
-				fmt.Print(".")
-			} else {
-				fmt.Print(w.At(i, j))
-			}
-		}
-		fmt.Println()
-	}
 }
 
 func NewWorld(w, h int8) World {
@@ -50,47 +24,38 @@ func NewWorld(w, h int8) World {
 	}
 
 	return World{
-		width:   w,
-		height:  h,
-		cells:   cells,
+		Grid:    Grid{w, h, cells},
 		players: [NUM_PLAYERS]*Player{},
 		alive:   0,
 	}
 }
 
-func ParseWorld(w, h int8, txt string) *World {
-	cells := []int8{}
-
-	for _, r := range txt {
-		if r == '.' {
-			cells = append(cells, -1)
-		} else if r >= '0' && r <= '9' {
-			cells = append(cells, int8(r-'0'))
-		} else {
-			continue
-		}
-	}
-
-	if len(cells) != int(w)*int(h) {
-		panic("could not parse world")
-	}
-
+func ParseWorld(w int8, h int8, txt string) *World {
 	return &World{
-		width:  w,
-		height: h,
-		cells:  cells,
+		Grid: ParseGrid(w, h, txt),
 	}
 }
 
 func (w *World) Copy() *World {
 	cp := World{
-		width:   w.width,
-		height:  w.height,
-		cells:   make([]int8, len(w.cells)),
-		players: w.players,
+		Grid:    w.Grid.Copy(),
+		players: [NUM_PLAYERS]*Player{},
 		alive:   w.alive,
 	}
-	copy(cp.cells, w.cells)
+
+	for i := 0; i < NUM_PLAYERS; i++ {
+		if w.players[i] == nil {
+			cp.players[i] = nil
+		} else {
+			cp.players[i] = &Player{
+				id:       w.players[i].id,
+				x:        w.players[i].x,
+				y:        w.players[i].y,
+				world:    &cp,
+				nextTurn: w.players[i].nextTurn,
+			}
+		}
+	}
 
 	return &cp
 }
@@ -110,13 +75,12 @@ func (w *World) AddPlayer(id, x, y int8, f AI) *Player {
 }
 
 func (w *World) NextPlayer(prev int8) int8 {
-	for i := prev + 1; i < prev+NUM_PLAYERS; i++ {
+	for i := prev + 1; i <= prev+NUM_PLAYERS; i++ {
 		id := i % NUM_PLAYERS
 		if w.players[id] != nil {
 			return id
 		}
 	}
-	panic("next player not found")
 	return -1
 }
 
@@ -126,24 +90,9 @@ func (w *World) AddPlayerAtRandom(id int8, f AI) {
 	w.AddPlayer(id, rx, ry, f)
 }
 
-func (w *World) GetPlayer(playerId int8) *Player {
-	return w.players[playerId]
-}
-
-func (w *World) TurnValid(x, y int8) bool {
-	if x < 0 || x >= w.width || y < 0 || y >= w.height {
-		return false
-	}
-
-	if w.At(x, y) != EMPTY {
-		return false
-	}
-
-	return true
-}
-
-func (w *World) ValidTurns(p *Player) []string {
-	valid := []string{}
+func (w *World) ValidTurns(p *Player) []Direction {
+	// valid := make([]string, 0, 4)
+	valid := []Direction{}
 
 	for _, turn := range DIRECTIONS {
 		if w.TurnValid(p.NextCoords(turn)) {
@@ -154,18 +103,20 @@ func (w *World) ValidTurns(p *Player) []string {
 	return valid
 }
 
-func (w *World) ClearPath(playerId int8) {
-	for i := range w.cells {
-		if w.cells[i] == playerId {
-			w.cells[i] = EMPTY
-		}
-	}
-}
-
-func (w *World) ApplyTurn(player *Player, turn string) {
+func (w *World) ApplyTurn(pid int8, turn Direction) {
+	player := w.players[pid]
 	player.x, player.y = player.NextCoords(turn)
 
+	if player.x < -1 || player.y < -1 {
+		panic(fmt.Sprintf("WHAT THE FUCK!!! %v", player))
+	}
+
 	if !w.TurnValid(player.x, player.y) {
+
+		// fmt.Printf("player %d turn %s invalid\n", player.id, turn)
+		// fmt.Println("player dump", player)
+		// fmt.Println(w)
+
 		w.players[player.id] = nil
 		w.alive--
 		w.ClearPath(player.id)
@@ -178,21 +129,21 @@ func (w *World) Active() bool {
 	return w.alive > 1
 }
 
-func (w *World) SimulateTurn() {
+func (w *World) SimTurn() {
 	player := w.players[w.current]
 	turn := player.NextTurn()
-	// fmt.Printf(" %d %s", w.players[i].id, turn)
-	w.ApplyTurn(player, turn)
 
-	if w.Active() {
-		w.current = w.NextPlayer(w.current)
-	}
+	// if log {
+	// 	fmt.Printf("[%d] [%s]\n", player.id, turn)
+	// }
+
+	w.ApplyTurn(w.current, turn) // 2
+	w.current = w.NextPlayer(w.current)
 }
 
-func (w *World) Simulate(playerId int8) int8 {
-	w.current = playerId
+func (w *World) Simulate() int8 {
 	for w.Active() {
-		w.SimulateTurn()
+		w.SimTurn()
 	}
 	winner := w.GetWinner()
 	return winner.id
@@ -210,37 +161,4 @@ func (w *World) GetWinner() *Player {
 	return nil
 }
 
-func (w *World) Area(x, y, val int8) int {
-	visited := make(map[int]struct{})
-
-	var area func(w *World, x, y, val int8) int
-
-	area = func(w *World, x, y, val int8) int {
-		if _, found := visited[w.Offset(x, y)]; found {
-			return 0
-		}
-		visited[w.Offset(x, y)] = struct{}{}
-
-		if w.At(x, y) != val {
-			return 0
-		} else {
-			sum := 0
-			if y > 0 {
-				sum += area(w, x, y-1, val) // up
-			}
-			if y < w.height-1 {
-				sum += area(w, x, y+1, val) // down
-			}
-			if x > 0 {
-				sum += area(w, x-1, y, val) // left
-			}
-			if x < w.width-1 {
-				sum += area(w, x+1, y, val) // right
-			}
-
-			return sum + 1
-		}
-	}
-
-	return area(w, x, y, val)
-}
+// ---------- end world -------------

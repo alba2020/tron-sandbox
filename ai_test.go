@@ -4,13 +4,49 @@ import "testing"
 
 func createSmallWorld() (*World, *Player) {
 	txt :=
-		`. 1 2 .
-  	 . 1 2 .
-	   . 1 2 .
-	   . 1 . .`
+		`. 1 2 . . . . . . .
+  	 . 1 2 . . . . . . .
+	   . 1 2 . . . . . . .
+	   . 1 . . . . . . . .
+		 . . . . . . . . . .
+		 . . . . . . . . . .
+		 . . . . . . . . . .
+		 . . . . . . . . . .
+		 . . . . . . . . . .
+		 . . . . . . . . . .`
 
-	w := ParseWorld(4, 4, txt)
+	w := ParseWorld(10, 10, txt)
+	w.AddPlayer(2, 2, 2, nil)
 	player := w.AddPlayer(1, 1, 3, nil)
+	return w, player
+}
+
+func createBigWorld() (*World, *Player) {
+	txt :=
+		`. . . . . . . . . . . 1 2 . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . 1 2 . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . 1 2 . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . 1 2 . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . 1 2 . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . 1 2 . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . 1 2 . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . 1 2 . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . 1 . . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . 1 . . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . 1 . . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+		 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .`
+
+	w := ParseWorld(30, 20, txt)
+	w.AddPlayer(2, 12, 7, nil)
+	player := w.AddPlayer(1, 11, 10, nil)
 	return w, player
 }
 
@@ -44,6 +80,34 @@ func BenchmarkRandomValidDirectionAI(b *testing.B) {
 func BenchmarkMaxAreaAI(b *testing.B) {
 	_, p := createSmallWorld()
 	p.nextTurn = MaxAreaAI
+
+	for i := 0; i < b.N; i++ {
+		p.NextTurn()
+	}
+}
+
+func BenchmarkMonteCarloAI(b *testing.B) {
+	_, p := createSmallWorld()
+	p.nextTurn = MonteCarloNSimulationsAI(5)
+
+	for i := 0; i < b.N; i++ {
+		p.NextTurn()
+	}
+}
+
+// ----- big --------
+func BenchmarkMaxAreaAIBig(b *testing.B) {
+	_, p := createBigWorld()
+	p.nextTurn = MaxAreaAI
+
+	for i := 0; i < b.N; i++ {
+		p.NextTurn()
+	}
+}
+
+func BenchmarkMonteCarloAIBig(b *testing.B) {
+	_, p := createBigWorld()
+	p.nextTurn = MonteCarloNSimulationsAI(600)
 
 	for i := 0; i < b.N; i++ {
 		p.NextTurn()

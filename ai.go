@@ -1,21 +1,19 @@
 package main
 
-type AI func(w *World, p *Player) string
+// -------------- start AI -------------
 
-var DIRECTIONS = []string{
-	"UP", "DOWN", "LEFT", "RIGHT",
+type AI func(w *World, p *Player) Direction
+
+func AlwaysLeftAI(w *World, p *Player) Direction {
+	return Left
 }
 
-func AlwaysLeftAI(w *World, p *Player) string {
-	return "LEFT"
-}
-
-func RandomDirectionAI(w *World, p *Player) string {
+func RandomDirectionAI(w *World, p *Player) Direction {
 	return randomElement(DIRECTIONS)
 }
 
 func RandomDirectionNRetriesAI(n int) AI {
-	return func(w *World, p *Player) string {
+	return func(w *World, p *Player) Direction {
 		for i := 0; i < n; i++ {
 			turn := randomElement(DIRECTIONS)
 			x, y := p.NextCoords(turn)
@@ -27,7 +25,7 @@ func RandomDirectionNRetriesAI(n int) AI {
 	}
 }
 
-func RandomValidDirectionAI(w *World, p *Player) string {
+func RandomValidDirectionAI(w *World, p *Player) Direction {
 	valid := w.ValidTurns(p)
 	if len(valid) == 0 {
 		return randomElement(DIRECTIONS)
@@ -35,7 +33,7 @@ func RandomValidDirectionAI(w *World, p *Player) string {
 	return randomElement(valid)
 }
 
-func MaxAreaAI(w *World, p *Player) string {
+func MaxAreaAI(w *World, p *Player) Direction {
 	valid := w.ValidTurns(p)
 	if len(valid) == 0 {
 		return randomElement(DIRECTIONS)
@@ -55,14 +53,46 @@ func MaxAreaAI(w *World, p *Player) string {
 	return turn
 }
 
-func MonteCarloMaxAreaAI(w *World, p *Player) string {
-	valid := w.ValidTurns(p)
-	for _, validTurn := range valid {
-		// n simulations
-		simWorld := w.Copy()
-		simPlayer := w.GetPlayer(p.id)
-		simWorld.ApplyTurn(simPlayer, validTurn)
-	}
+func MonteCarloNSimulationsAI(n int) AI {
+	return func(world *World, player *Player) Direction {
+		decisions := make(map[Direction]int)
+		valid := world.ValidTurns(player)
 
-	return ""
+		for _, firstTurn := range valid {
+			for i := 0; i < n; i++ {
+				simWorld := world.Copy()
+
+				for idx := range simWorld.players {
+					if simWorld.players[idx] != nil {
+						simWorld.players[idx].nextTurn = RandomValidDirectionAI
+					}
+				}
+
+				simWorld.ApplyTurn(player.id, firstTurn) // 1
+				simWorld.current = simWorld.NextPlayer(player.id)
+
+				winnerId := simWorld.Simulate()
+
+				if winnerId == player.id {
+					decisions[firstTurn]++
+				}
+			}
+		}
+
+		if len(decisions) == 0 { // no ideas :(
+			if len(valid) > 0 { // valid turns left
+				return randomElement(valid)
+			} else {
+				return randomElement(DIRECTIONS) // bad turn
+			}
+		}
+
+		maxDirection, _ := maxValueFromMap(decisions)
+		// fmt.Println(decisions)
+		// fmt.Printf("MC says %s\n", maxDirection)
+
+		return maxDirection
+	}
 }
+
+// --------- end AI ------------------

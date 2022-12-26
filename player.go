@@ -2,6 +2,8 @@ package main
 
 import "fmt"
 
+// ------------ start player -------------
+
 type Player struct {
 	id       int8
 	x        int8
@@ -10,21 +12,23 @@ type Player struct {
 	nextTurn AI
 }
 
-func (p *Player) NextTurn() string {
+func (p *Player) NextTurn() Direction {
 	return p.nextTurn(p.world, p)
 }
 
-func (p *Player) NextCoords(turn string) (int8, int8) {
+func (p *Player) NextCoords(turn Direction) (int8, int8) {
 	switch turn {
-	case "LEFT":
+	case Left:
 		return p.x - 1, p.y
-	case "RIGHT":
+	case Right:
 		return p.x + 1, p.y
-	case "UP":
+	case Up:
 		return p.x, p.y - 1
-	case "DOWN":
+	case Down:
 		return p.x, p.y + 1
 	}
-	fmt.Println("bad turn")
-	return p.x, p.y
+
+	panic(fmt.Sprintf("bad turn: [%s]", turn))
 }
+
+// ----------- end player ------------
