@@ -12,3 +12,19 @@ BenchmarkMaxAreaAIBig-8             	    6364	    185704 ns/op	   70335 B/op	   
 BenchmarkMonteCarloAIBig-8          	     170	   7043877 ns/op	 2116439 B/op	   98948 allocs/op
 PASS
 ok  	alba2020/tron/sandbox	9.928s
+
+
+Running tool: /opt/homebrew/bin/go test -benchmem -run=^$ -bench ^(BenchmarkAlwaysLeftAI|BenchmarkRandomDirectionAI|BenchmarkRandomValidDirectionAI|BenchmarkMaxAreaAI|BenchmarkMonteCarloAI|BenchmarkMaxAreaAIBig|BenchmarkMonteCarloAIBig)$ alba2020/tron/sandbox
+
+goos: darwin
+goarch: arm64
+pkg: alba2020/tron/sandbox
+BenchmarkAlwaysLeftAI-8             	505630315	         2.049 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRandomDirectionAI-8        	88590031	        13.54 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRandomValidDirectionAI-8   	32262255	        36.03 ns/op	       8 B/op	       1 allocs/op
+BenchmarkMaxAreaAI-8                	   40653	     29567 ns/op	    8792 B/op	      46 allocs/op
+BenchmarkMonteCarloAI-8             	   33964	     35389 ns/op	   18972 B/op	     753 allocs/op
+BenchmarkMaxAreaAIBig-8             	    6410	    187260 ns/op	   70327 B/op	      91 allocs/op
+BenchmarkMonteCarloAIBig-8          	     127	   9461324 ns/op	 5187207 B/op	  188438 allocs/op
+PASS
+ok  	alba2020/tron/sandbox	10.560s

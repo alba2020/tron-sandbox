@@ -15,7 +15,7 @@ func animate(w *World) int8 {
 		fmt.Print("\033[H\033[2J") // clear screen
 		w.SimTurn()
 		Show(w)
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 	}
 	winner := w.GetWinner()
 	return winner.id
@@ -41,6 +41,7 @@ func doAnimation() {
 	w := NewWorld(14, 10)
 	w.AddPlayerAtRandom(0, RandomValidDirectionAI)
 	w.AddPlayerAtRandom(1, MaxAreaAI)
+	w.AddPlayerAtRandom(2, MonteCarloNSimulationsAI(20))
 
 	winnerId := animate(&w)
 	fmt.Printf("game finished, player %d wins\n", winnerId)
@@ -62,8 +63,8 @@ func doSimulation() {
 }
 
 func main() {
-	// doAnimation()
-	doSimulation()
+	doAnimation()
+	// doSimulation()
 
 	// txt :=
 	// 	`. 1 0

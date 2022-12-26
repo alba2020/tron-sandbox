@@ -10,6 +10,7 @@ type Player struct {
 	y        int8
 	world    *World
 	nextTurn AI
+	alive    bool
 }
 
 func (p *Player) NextTurn() Direction {

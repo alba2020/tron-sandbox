@@ -45,7 +45,7 @@ var brightColors = []string{
 func getColor(w *World, x int8, y int8) string {
 	id := w.At(x, y)
 	for _, p := range w.players {
-		if p != nil && x == p.x && y == p.y {
+		if x == p.x && y == p.y {
 			return brightColors[id]
 		}
 	}

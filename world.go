@@ -12,7 +12,7 @@ const NUM_PLAYERS = 4
 
 type World struct {
 	Grid
-	players [NUM_PLAYERS]*Player
+	players [NUM_PLAYERS]Player
 	alive   int8
 	current int8
 }
@@ -25,7 +25,7 @@ func NewWorld(w, h int8) World {
 
 	return World{
 		Grid:    Grid{w, h, cells},
-		players: [NUM_PLAYERS]*Player{},
+		players: [NUM_PLAYERS]Player{},
 		alive:   0,
 	}
 }
@@ -39,45 +39,36 @@ func ParseWorld(w int8, h int8, txt string) *World {
 func (w *World) Copy() *World {
 	cp := World{
 		Grid:    w.Grid.Copy(),
-		players: [NUM_PLAYERS]*Player{},
+		players: [NUM_PLAYERS]Player{},
 		alive:   w.alive,
 	}
 
 	for i := 0; i < NUM_PLAYERS; i++ {
-		if w.players[i] == nil {
-			cp.players[i] = nil
-		} else {
-			cp.players[i] = &Player{
-				id:       w.players[i].id,
-				x:        w.players[i].x,
-				y:        w.players[i].y,
-				world:    &cp,
-				nextTurn: w.players[i].nextTurn,
-			}
-		}
+		cp.players[i] = w.players[i]
+		cp.players[i].world = &cp
 	}
 
 	return &cp
 }
 
 func (w *World) AddPlayer(id, x, y int8, f AI) *Player {
-	p := Player{
+	w.players[id] = Player{
 		id:       id,
 		x:        x,
 		y:        y,
 		world:    w,
 		nextTurn: f,
+		alive:    true,
 	}
-	w.players[id] = &p
 	w.alive++
-	w.Set(p.x, p.y, p.id)
-	return &p
+	w.Set(x, y, id)
+	return &w.players[id]
 }
 
 func (w *World) NextPlayer(prev int8) int8 {
 	for i := prev + 1; i <= prev+NUM_PLAYERS; i++ {
 		id := i % NUM_PLAYERS
-		if w.players[id] != nil {
+		if w.players[id].alive {
 			return id
 		}
 	}
@@ -104,7 +95,7 @@ func (w *World) ValidTurns(p *Player) []Direction {
 }
 
 func (w *World) ApplyTurn(pid int8, turn Direction) {
-	player := w.players[pid]
+	player := &w.players[pid]
 	player.x, player.y = player.NextCoords(turn)
 
 	if player.x < -1 || player.y < -1 {
@@ -117,7 +108,7 @@ func (w *World) ApplyTurn(pid int8, turn Direction) {
 		// fmt.Println("player dump", player)
 		// fmt.Println(w)
 
-		w.players[player.id] = nil
+		w.players[player.id].alive = false
 		w.alive--
 		w.ClearPath(player.id)
 	} else {
@@ -133,9 +124,7 @@ func (w *World) SimTurn() {
 	player := w.players[w.current]
 	turn := player.NextTurn()
 
-	// if log {
-	// 	fmt.Printf("[%d] [%s]\n", player.id, turn)
-	// }
+	// fmt.Printf("%v [%s]\n", player, turn)
 
 	w.ApplyTurn(w.current, turn) // 2
 	w.current = w.NextPlayer(w.current)
@@ -154,8 +143,8 @@ func (w *World) GetWinner() *Player {
 		panic("should be 1 winner")
 	}
 	for i := range w.players {
-		if w.players[i] != nil {
-			return w.players[i]
+		if w.players[i].alive {
+			return &w.players[i]
 		}
 	}
 	return nil

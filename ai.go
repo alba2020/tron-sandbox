@@ -63,9 +63,7 @@ func MonteCarloNSimulationsAI(n int) AI {
 				simWorld := world.Copy()
 
 				for idx := range simWorld.players {
-					if simWorld.players[idx] != nil {
-						simWorld.players[idx].nextTurn = RandomValidDirectionAI
-					}
+					simWorld.players[idx].nextTurn = RandomValidDirectionAI
 				}
 
 				simWorld.ApplyTurn(player.id, firstTurn) // 1
